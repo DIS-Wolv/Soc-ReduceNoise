@@ -1,35 +1,36 @@
 import fs from 'fs';
 
-const filePath = './extract.txt';
 
-try {
-	const logsToBeParsed = fs.readFileSync(filePath, 'utf-8');
+type HostnameLogMap = Map<string, string[]>;
+const logsSegragatedOnHostname: HostnameLogMap = hostnameSegregationSyslog();
 
-	const splittedLogsArray = logsToBeParsed.split("\n");
+function hostnameSegregationSyslog(): HostnameLogMap{
+    const logsToBeParsed = fs.readFileSync('./extract.txt', 'utf-8');
+    const splittedLogsArray = logsToBeParsed.split("\n");
 
-    const regexToFetchHostnameSyslog : RegExp = /^(?:\S+\s+){3}(\S+)/;
+    try {
+        const regexToFetchHostnameSyslog : RegExp = /^(?:\S+\s+){3}(\S+)/;
+        const segregatedLogsArrayBasedOnHostname: HostnameLogMap = new Map();
 
-    type HostnameLogMap = Map<string, string[]>;
-    const segregatedLogsArrayBasedOnHostname: HostnameLogMap = new Map();
+        for (const log of splittedLogsArray){
 
-    console.time()
+            const match = log.match(regexToFetchHostnameSyslog);
+            if (match && match.length > 1) {
+                const hostname = match[1];
+                const existing = 
+                    segregatedLogsArrayBasedOnHostname.get(hostname!) ?? [];
+                existing.push(log);
+                
+                segregatedLogsArrayBasedOnHostname.set(hostname!, existing);
+            } 
+        };
 
-    for (const log of splittedLogsArray){
-        const match = log.match(regexToFetchHostnameSyslog)
-
-        if (match && match.length > 1) {
-            const hostname = match[1];
-            const existing = segregatedLogsArrayBasedOnHostname.get(hostname!) ?? [];
-            existing.push(log);
-            
-            segregatedLogsArrayBasedOnHostname.set(hostname!, existing);
-        } 
-    };
-
-    console.log(segregatedLogsArrayBasedOnHostname)
-
-    console.timeEnd();
-
-} catch (error) {
-	console.error('Error reading file:', error);
+        return segregatedLogsArrayBasedOnHostname;
+    } catch (error) {
+        console.error('Error | couldn\'t segregate logs based on hostnames', error);
+        throw error;
+    }
 }
+
+console.log(logsSegragatedOnHostname)
+
