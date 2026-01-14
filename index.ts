@@ -1,26 +1,34 @@
 import fs from 'fs';
 
-const filePath = 'extract.txt';
+const filePath = './extract.txt';
 
 try {
-	//extract data
-	const data = fs.readFileSync(filePath, 'utf-8');
+	const logsToBeParsed = fs.readFileSync(filePath, 'utf-8');
 
-	// split string to items based on \n character
-	const splittingLogs = data.split("\n");
+	const splittedLogsArray = logsToBeParsed.split("\n");
 
-    const reFetchHostname : RegExp = /^(?:\S+\s+){3}(\S+)/;
+    const regexToFetchHostnameSyslog : RegExp = /^(?:\S+\s+){3}(\S+)/;
 
-    splittingLogs.forEach((item) => {
-        const match = item.match(reFetchHostname)
-        if (match) {
-            // match[1] contient le hostname capturé
-            console.log("Hostname :", match[1]);
-        } else {
-            // Pas de correspondance – la ligne n’est peut‑être pas au format syslog attendu
-            console.log("Pas de hostname trouvé pour :", item);
-        }
-    });
+    type HostnameLogMap = Map<string, string[]>;
+    const segregatedLogsArrayBasedOnHostname: HostnameLogMap = new Map();
+
+    console.time()
+
+    for (const log of splittedLogsArray){
+        const match = log.match(regexToFetchHostnameSyslog)
+
+        if (match && match.length > 1) {
+            const hostname = match[1];
+            const existing = segregatedLogsArrayBasedOnHostname.get(hostname!) ?? [];
+            existing.push(log);
+            
+            segregatedLogsArrayBasedOnHostname.set(hostname!, existing);
+        } 
+    };
+
+    console.log(segregatedLogsArrayBasedOnHostname)
+
+    console.timeEnd();
 
 } catch (error) {
 	console.error('Error reading file:', error);
