@@ -1,72 +1,116 @@
 import fs from 'fs';
+import { stat } from "node:fs/promises";
 
 /**
- * HostnameLogMap - creates an array type, containing a string (index) and array
+ * filenames
  */
+
+const originalFilename: string = "original.json";
+const processedFilename: string = "processed.json";
+
+/**
+ * Getting and print file size
+ */
+
+let originalFileSizeInKB: number;
+let processedFileSizeInKB: number;
+
+async function gettingJSONFileSize(_filename: string): Promise<void>{
+    const statResult = await stat(_filename);
+    const fileSize: number = statResult.size / 1024;
+
+    (_filename == "original.json") ? 
+        originalFileSizeInKB    =   fileSize:
+        processedFileSizeInKB   =   fileSize;
+
+    console.info(`---> ${_filename} has a size of ${Math.floor(fileSize)} KB`);
+}
+
+gettingJSONFileSize(originalFilename);
+
+
+/**
+ * Regexes for hosntame and processes
+ * HostnameLogMap - creates an map type, containing a string (key - hostname), 
+ * holding itself a value of map of a string (key - process) and string array (value - log)
+ * segregatedLogsArrayBasedOnHostname is Map holding HostnameLogMap type
+ */
+
+const regexToFetchHostnameSyslog = /^\S+\s+\S+\s+\S+\s+(\S+)/;
+const regexToFetchProcessSyslog = /^\S+\s+\S+\s+\S+\s+\S+\s+([^\s\[:]+)(?:\[\d+\])?:/;
 type HostnameLogMap = Map<string, Map<string, string[]>>;
-
-/**
- * regexToFetchHostnameSyslog           -   the rg to get log hostname ; syslog format
- * segregatedLogsArrayBasedOnHostname   -   the processed logs map contained in below map
- * regexToFetchProcessSyslog            -   the rg to get log process ; syslog format
- * logsSegragatedOnHostname             -   will store all the logs
- */
-const regexToFetchHostnameSyslog : RegExp = /^(?:\S+\s+){3}(\S+)/;
 const segregatedLogsArrayBasedOnHostname: HostnameLogMap = new Map();
-const regexToFetchProcessSyslog : RegExp = /^\S+\s+\S+\s+\S+\s+\S+\s+([^\s\[:]+)(?:\[\d+\])?:/;
-const logsSegragatedOnHostname: HostnameLogMap = hostnameSegregationSyslog();
+
 
 /**
- * 1. extract the logs and cut them off based on \n
+ * 1. extract the logs and cut them off based on \n 
+ *      trim() to remove whitespaces
+ *      boolean to filter empty strings
+ *      remove extra characters that may exist
+ * 
  * 2. for each log, check a match with hostname, if so store to doesHosntameExists
  * 3. if no, create new array witch matching new hostname
  * 4. push log to array
  * 
  * @returns segregatedLogsArrayBasedOnHostname
- */
-function hostnameSegregationSyslog(): HostnameLogMap{
+*/
 
-    const logsToBeParsed = fs.readFileSync('./og.txt', 'utf-8');
-    const splittedLogsArray = logsToBeParsed.split("\n");
-        
+hostnameSegregationSyslog();
+
+function hostnameSegregationSyslog(): void{
+
     try {
-        for (const log of splittedLogsArray){
-            
-            if (!log.trim()) continue;
+        
+        // 1.
+        const logsToBeParsed = fs.readFileSync(originalFilename, "utf-8")
+            .split("\n")
+            .map(line => line.trim())
+            .filter(Boolean)
+            .map(line => line.replace(/^"(.*)",?$/, "$1"));
 
+        // 
+        for (const log of logsToBeParsed) {
             const hostnameMatch = log.match(regexToFetchHostnameSyslog);
             const processMatch = log.match(regexToFetchProcessSyslog);
 
-            if ( hostnameMatch && hostnameMatch.length > 1 &&
-                processMatch && processMatch.length > 1
-            ) {
-                const hostname = hostnameMatch[1];
-                const process = processMatch[1];
+            // 
+            if (!hostnameMatch || !hostnameMatch[1]) continue;
+            if (!processMatch || !processMatch[1]) continue;
 
-                // 1️⃣ Get or create process map for hostname
-                const processMap = segregatedLogsArrayBasedOnHostname.get(hostname!) ??
-                new Map<string, string[]>();
+            const hostname = hostnameMatch[1];
+            const process = processMatch[1];
 
-                // 2️⃣ Get or create log array for process
-                const processLogs = processMap.get(process!) ?? [];
-
-                // 3️⃣ Push log
-                processLogs.push(log);
-
-                // 4️⃣ Persist back into maps
-                processMap.set(process!, processLogs);
-                segregatedLogsArrayBasedOnHostname.set(hostname!, processMap);
+            // 
+            let processMap = segregatedLogsArrayBasedOnHostname.get(hostname);
+            if (!processMap) {
+                processMap = new Map<string, string[]>();
+                segregatedLogsArrayBasedOnHostname.set(hostname, processMap);
             }
 
-        };
+            // 
+            let processLogs = processMap.get(process);
+            if (!processLogs) {
+                processLogs = [];
+                processMap.set(process, processLogs);
+            }
 
-        return segregatedLogsArrayBasedOnHostname;
-    
+            // 
+            processLogs.push(log);
+        }
+
+        const outputObj: Record<string, Record<string, string[]>> = {};
+        for (const [hostname, procMap] of segregatedLogsArrayBasedOnHostname) {
+            outputObj[hostname] = {};
+            for (const [proc, logs] of procMap) {
+                outputObj[hostname][proc] = logs;
+            }
+        }
+
+        // write processed JSON
+        fs.writeFileSync(processedFilename, JSON.stringify(outputObj, null, 2), "utf-8");
+
     } catch (error) {
-        console.error('Error | couldn\'t segregate logs based on hostnames', error);
+        console.error("Error | couldn't segregate logs based on hostnames", error);
         throw error;
     }
 }
-
-console.log(logsSegragatedOnHostname)
-

@@ -78,8 +78,8 @@ Jun 16 04:16:18 combo su(pam_unix)[25548]: session closed for user news
 Jun 17 04:03:33 combo su(pam_unix)[27953]: session opened for user cyrus by (uid=0)
 Jun 17 04:03:34 combo su(pam_unix)[27953]: session closed for user cyrus
 Jun 17 04:03:36 combo logrotate: ALERT exited abnormally with [1]
-Jun 17 04:09:43 combo su(pam_unix)[29190]: session opened for user news by (uid=0)
-Jun 17 04:09:45 combo su(pam_unix)[29190]: session closed for user news
+Jun 17 04:09:43 toto su(pam_unix)[29190]: session opened for user news by (uid=0)
+Jun 17 04:09:45 toto su(pam_unix)[29190]: session closed for user news
 Jun 17 07:07:00 combo ftpd[29504]: connection from 24.54.76.216 (24-54-76-216.bflony.adelphia.net) at Fri Jun 17 07:07:00 2005 
 Jun 17 07:07:00 combo ftpd[29508]: connection from 24.54.76.216 (24-54-76-216.bflony.adelphia.net) at Fri Jun 17 07:07:00 2005 
 Jun 17 07:07:00 combo ftpd[29507]: connection from 24.54.76.216 (24-54-76-216.bflony.adelphia.net) at Fri Jun 17 07:07:00 2005 
