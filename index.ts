@@ -13,7 +13,7 @@ let originalFileSizeInKB: number;
 let processedFileSizeInKB: number;
 
 // structure of record holder
-type HostnameLogMap = Map<string, Map<string, string[]>>;
+type HostnameLogMap =   Map<string, Map<string, Map<string, string[]>>>;
 const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
 
 
@@ -58,29 +58,56 @@ function hostnameSegregationSyslog(){
             const hostname = hostnameMatch[1];                                  
             const process  = processMatch[1];
 
+            const separatorIndex = log.indexOf(": ");
+            if (separatorIndex === -1) continue;
+
+            // message body (deduplication key)
+            const messageKey = log.slice(separatorIndex + 2);
+
+
+  
             let processMap = sortedLogsOnHostnameAndProcess.get(hostname)       // For each log, ensure the hostname map exists, 
             if (!processMap) {                                                  // ensure the process array exists, then push.
-                processMap = new Map<string, string[]>();                       // returns HostnameLogMap type
+                processMap = new Map<string, Map<string, string[]>>();          // returns HostnameLogMap type
                 sortedLogsOnHostnameAndProcess.set(hostname, processMap);
             }
 
-            let processLogs = processMap.get(process);
-            if (!processLogs) {
-                processLogs = [];
-                processMap.set(process, processLogs);
+            let messageMap = processMap.get(process);
+            if (!messageMap) {
+                messageMap = new Map<string, string[]>();
+                processMap.set(process, messageMap);
             }
 
-            processLogs.push(log);
-            
+            let occurrences = messageMap.get(messageKey);
+            if (!occurrences) {
+                occurrences = [];
+                messageMap.set(messageKey, occurrences);
+            }
+
+            const timestamp = log.split(" ", 4).slice(0, 3).join(" ");
+            const pidMatch = log.match(/\[(\d+)\]/);
+            const pid = pidMatch ? pidMatch[1] : undefined;
+            const datePart = pid
+                ? `${timestamp} [${pid}]`
+                : timestamp;
+
+            occurrences.push(datePart);
+
         }
 
-        const outputObj: Record<string, Record<string, string[]>> = {};         // Convert the nested Map structure (hostname → process → logs) 
-        for (const [hostname, procMap] of sortedLogsOnHostnameAndProcess) {     // into a plain object suitable for JSON serialization.
+        const outputObj: Record<string, Record<string, Record<string, string[]>>> = {};         // Convert the nested Map structure (hostname → process → logs) 
+        for (const [hostname, processMap] of sortedLogsOnHostnameAndProcess) {     // into a plain object suitable for JSON serialization.
             outputObj[hostname] = {};                                           // sets top level JSON key
-            for (const [proc, logs] of procMap) {
-                outputObj[hostname][proc] = logs;                               // sets sub structure savec in above one
+            
+            for (const [process, messageMap] of processMap) {
+                outputObj[hostname][process] = {};                               // sets sub structure savec in above one
+                
+                for (const [message, dates] of messageMap) {
+                    outputObj[hostname][process][message] = dates;
+                }
             }
         }
+        
 
 
         fs.writeFileSync(processedFilename, JSON                                // wrtie to processedFilename
@@ -96,6 +123,26 @@ function hostnameSegregationSyslog(){
  * Calling functions
  */
 
-gettingJSONFileSize(originalFilename);
+async function main() {
+    await gettingJSONFileSize(originalFilename);
+    hostnameSegregationSyslog();
+    await gettingJSONFileSize(processedFilename);
+}
 
-hostnameSegregationSyslog();
+main().catch(console.error);
+
+/**
+ * Normalize timestamps → store as ISO or epoch for easier sorting/comparison.
+
+Optional PID metadata → keep PID separate from date string for flexibility.
+
+Message normalization → replace volatile data (IPs, UUIDs, user IDs) for better deduplication.
+
+Async I/O → use fs.promises for reading/writing large files to avoid blocking.
+
+Memory optimization → consider streaming large files instead of loading all logs at once.
+
+Add counts / firstSeen / lastSeen → easier analytics without parsing arrays.
+
+Configurable keys → allow toggling PID inclusion or message normalization.
+ */
