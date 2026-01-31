@@ -65,10 +65,7 @@ function hostnameSegregationSyslog(){
             const separatorIndex = log.indexOf(": ");
             if (separatorIndex === -1) continue;
 
-            // message body (deduplication key)
-            const messageKey = log.slice(separatorIndex + 2);
-
-
+            const messageKey = log.slice(separatorIndex + 2);                   // message body (deduplication key)
   
             let processMap = sortedLogsOnHostnameAndProcess.get(hostname)       // For each log, ensure the hostname map exists, 
             if (!processMap) {                                                  // ensure the process array exists, then push.
@@ -76,19 +73,19 @@ function hostnameSegregationSyslog(){
                 sortedLogsOnHostnameAndProcess.set(hostname, processMap);
             }
 
-            let messageMap = processMap.get(process);
-            if (!messageMap) {
+            let messageMap = processMap.get(process);                           // reiterate process for process
+            if (!messageMap) {                                  
                 messageMap = new Map<string, string[]>();
-                processMap.set(process, messageMap);
+                processMap.set(process, messageMap);                            // it adds the message
             }
 
-            let occurrences = messageMap.get(messageKey);
+            let occurrences = messageMap.get(messageKey);                       // check the log message
             if (!occurrences) {
                 occurrences = [];
-                messageMap.set(messageKey, occurrences);
+                messageMap.set(messageKey, occurrences);                        
             }
 
-            const timestamp = log.split(" ", 4).slice(0, 3).join(" ");
+            const timestamp = log.split(" ", 4).slice(0, 3).join(" ");          // process and push date 
             const pidMatch = log.match(/\[(\d+)\]/);
             const pid = pidMatch ? pidMatch[1] : undefined;
             const datePart = pid
