@@ -4,8 +4,8 @@
 import fs from 'fs';
 import { stat } from "node:fs/promises";
 
-const originalFilename: string = "original.json";
-const processedFilename:string = "processed.json";
+const originalFilename: string = "rooty.json";
+const processedFilename:string = "rooty_processed.json";
 const regexToFetchHostnameSyslog = /^\S+\s+\S+\s+\S+\s+(\S+)/;
 const regexToFetchProcessSyslog = /^\S+\s+\S+\s+\S+\s+\S+\s+([^\s\[:]+)(?:\[\d+\])?:/;
 
@@ -23,11 +23,15 @@ const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
  */
 async function gettingJSONFileSize(_filename: string): Promise<void>{
     const statResult = await stat(_filename);
+    console.log(_filename)
     const fileSize = statResult.size / 1024;
 
     (_filename == "original.json") ? 
         originalFileSizeInKB    =   fileSize:
         processedFileSizeInKB   =   fileSize;
+
+    await console.log(typeof(processedFileSizeInKB) )
+    await console.log(typeof(originalFileSizeInKB) )
 
     console.info(`---> ${_filename} has a size of ${Math.floor(fileSize)} KB`);
 }
@@ -127,6 +131,7 @@ async function main() {
     await gettingJSONFileSize(originalFilename);
     hostnameSegregationSyslog();
     await gettingJSONFileSize(processedFilename);
+   //await console.log(Math.floor((processedFileSizeInKB / originalFileSizeInKB)*100))
 }
 
 main().catch(console.error);

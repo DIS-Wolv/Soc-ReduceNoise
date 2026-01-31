@@ -1,0 +1,192 @@
+{
+  "fedora": {
+    "unix_chkpwd": {
+      "password check failed for user (kwata)": [
+        "Jan 25 16:37:26 [11479]",
+        "Jan 26 20:32:34 [18691]",
+        "Jan 26 20:32:41 [18698]",
+        "Jan 27 18:15:13 [2334]"
+      ]
+    },
+    "sudo": {
+      "pam_unix(sudo:auth): authentication failure; logname=kwata uid=1000 euid=0 tty=/dev/pts/0 ruser=kwata rhost=  user=kwata": [
+        "Jan 25 16:37:26 [11468]"
+      ],
+      "  kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/wg-quick up wg11": [
+        "Jan 25 16:37:32 [11468]",
+        "Jan 26 18:04:09 [7425]",
+        "Jan 26 18:06:28 [8221]"
+      ],
+      "pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)": [
+        "Jan 25 16:37:32 [11468]",
+        "Jan 26 18:04:09 [7425]",
+        "Jan 26 18:05:06 [8012]",
+        "Jan 26 18:06:28 [8221]",
+        "Jan 26 18:06:53 [8308]",
+        "Jan 26 18:59:50 [12052]",
+        "Jan 27 18:54:50 [8305]",
+        "Jan 27 20:22:55 [3862]",
+        "Jan 28 18:12:15 [12877]",
+        "Jan 29 18:39:58 [6506]"
+      ],
+      "pam_unix(sudo:session): session closed for user root": [
+        "Jan 25 16:37:32 [11468]",
+        "Jan 26 18:04:09 [7425]",
+        "Jan 26 18:05:06 [8012]",
+        "Jan 26 18:06:28 [8221]",
+        "Jan 26 18:06:53 [8308]",
+        "Jan 26 18:59:50 [12052]",
+        "Jan 27 18:54:50 [8305]",
+        "Jan 27 20:22:55 [3862]",
+        "Jan 28 18:12:51 [12877]",
+        "Jan 29 18:39:58 [6506]"
+      ],
+      "  kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/wg-quick down wg11": [
+        "Jan 26 18:05:06 [8012]",
+        "Jan 26 18:06:53 [8308]"
+      ],
+      "  kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/systemctl start libvirtd": [
+        "Jan 26 18:59:50 [12052]",
+        "Jan 27 18:54:50 [8305]",
+        "Jan 27 20:22:55 [3862]"
+      ],
+      "  kwata : TTY=pts/0 ; PWD=/home/kwata/Documents/deving/Soc-ReduceNoise ; USER=root ; COMMAND=/usr/sbin/dnf upgrade": [
+        "Jan 28 18:12:14 [12877]"
+      ],
+      "pam_systemd(sudo:session): Failed to check if /run/user/0/bus exists, ignoring: Permission denied": [
+        "Jan 28 18:12:15 [12877]"
+      ],
+      "  kwata : TTY=pts/1 ; PWD=/var/log ; USER=root ; COMMAND=/usr/sbin/cat secure": [
+        "Jan 29 18:39:58 [6506]"
+      ]
+    },
+    "lightdm": {
+      "pam_unix(lightdm:session): session closed for user kwata": [
+        "Jan 25 16:37:34 [2924]",
+        "Jan 25 23:15:37 [2222]",
+        "Jan 26 13:40:33 [2146]",
+        "Jan 26 23:16:36 [2191]",
+        "Jan 27 19:22:37 [2335]",
+        "Jan 27 22:20:57 [2306]",
+        "Jan 28 00:09:41 [2161]",
+        "Jan 28 18:40:36 [2159]",
+        "Jan 29 00:40:38 [2177]"
+      ],
+      "pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)": [
+        "Jan 25 21:47:21 [1972]",
+        "Jan 26 13:34:45 [1894]",
+        "Jan 26 17:41:21 [1927]",
+        "Jan 27 18:14:56 [1963]",
+        "Jan 27 20:21:38 [2050]",
+        "Jan 27 22:22:07 [1900]",
+        "Jan 28 17:19:05 [1910]",
+        "Jan 28 22:20:59 [1928]",
+        "Jan 29 18:34:14 [3616]"
+      ],
+      "gkr-pam: unable to locate daemon control file": [
+        "Jan 25 21:47:33 [2222]",
+        "Jan 26 13:34:49 [2146]",
+        "Jan 26 17:41:25 [2191]",
+        "Jan 27 18:15:13 [2212]",
+        "Jan 27 18:15:22 [2335]",
+        "Jan 27 20:21:42 [2306]",
+        "Jan 27 22:22:11 [2161]",
+        "Jan 28 17:19:14 [2159]",
+        "Jan 28 22:21:04 [2177]",
+        "Jan 29 18:34:19 [3866]"
+      ],
+      "gkr-pam: stashed password to try later in open session": [
+        "Jan 25 21:47:33 [2222]",
+        "Jan 26 13:34:49 [2146]",
+        "Jan 26 17:41:25 [2191]",
+        "Jan 27 18:15:13 [2212]",
+        "Jan 27 18:15:22 [2335]",
+        "Jan 27 20:21:42 [2306]",
+        "Jan 27 22:22:11 [2161]",
+        "Jan 28 17:19:14 [2159]",
+        "Jan 28 22:21:04 [2177]",
+        "Jan 29 18:34:19 [3866]"
+      ],
+      "pam_unix(lightdm-greeter:session): session closed for user lightdm": [
+        "Jan 25 21:47:33 [1972]",
+        "Jan 26 13:34:49 [1894]",
+        "Jan 26 17:41:25 [1927]",
+        "Jan 27 18:15:22 [1963]",
+        "Jan 27 20:21:42 [2050]",
+        "Jan 27 22:22:11 [1900]",
+        "Jan 28 17:19:14 [1910]",
+        "Jan 28 22:21:04 [1928]",
+        "Jan 29 18:34:19 [3616]"
+      ],
+      "pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)": [
+        "Jan 25 21:47:34 [2222]",
+        "Jan 26 13:34:50 [2146]",
+        "Jan 26 17:41:26 [2191]",
+        "Jan 27 18:15:22 [2335]",
+        "Jan 27 20:21:43 [2306]",
+        "Jan 27 22:22:12 [2161]",
+        "Jan 28 17:19:15 [2159]",
+        "Jan 28 22:21:04 [2177]",
+        "Jan 29 18:34:19 [3866]"
+      ],
+      "gkr-pam: gnome-keyring-daemon started properly and unlocked keyring": [
+        "Jan 25 21:47:34 [2222]",
+        "Jan 26 13:34:50 [2146]",
+        "Jan 26 17:41:26 [2191]",
+        "Jan 27 18:15:22 [2335]",
+        "Jan 27 20:21:43 [2306]",
+        "Jan 27 22:22:12 [2161]",
+        "Jan 28 17:19:15 [2159]",
+        "Jan 28 22:21:04 [2177]",
+        "Jan 29 18:34:19 [3866]"
+      ],
+      "pam_unix(lightdm:auth): authentication failure; logname= uid=0 euid=0 tty=:0 ruser= rhost=  user=kwata": [
+        "Jan 27 18:15:13 [2212]"
+      ]
+    },
+    "(systemd)": {
+      "pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)": [
+        "Jan 25 21:47:21 [1980]",
+        "Jan 26 13:34:45 [1904]",
+        "Jan 26 17:41:21 [1950]",
+        "Jan 27 18:14:56 [1971]",
+        "Jan 27 20:21:38 [2058]",
+        "Jan 27 22:22:07 [1908]",
+        "Jan 28 17:19:06 [1917]",
+        "Jan 28 22:20:59 [1934]",
+        "Jan 29 18:34:14 [3624]"
+      ],
+      "pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)": [
+        "Jan 25 21:47:33 [2373]",
+        "Jan 26 13:34:50 [2237]",
+        "Jan 26 17:41:25 [2274]",
+        "Jan 27 18:15:22 [2362]",
+        "Jan 27 20:21:42 [2386]",
+        "Jan 27 22:22:12 [2282]",
+        "Jan 28 17:19:14 [2303]",
+        "Jan 28 22:21:04 [2314]",
+        "Jan 29 18:34:19 [4004]"
+      ],
+      "pam_unix(systemd-user:session): session opened for user root(uid=0) by root(uid=0)": [
+        "Jan 28 18:12:15 [12892]"
+      ]
+    },
+    "i3lock": {
+      "pam_unix(i3lock:auth): authentication failure; logname=kwata uid=1000 euid=1000 tty=:0 ruser= rhost=  user=kwata": [
+        "Jan 26 20:32:34 [18672]"
+      ]
+    },
+    "(o-bridge)": {
+      "pam_unix(login:session): session opened for user kwata(uid=1000) by kwata(uid=0)": [
+        "Jan 28 18:12:49 [14209]",
+        "Jan 28 18:12:51 [14409]"
+      ]
+    },
+    "(sd-pam)": {
+      "pam_unix(login:session): session closed for user kwata": [
+        "Jan 28 18:12:49 [14211]",
+        "Jan 28 18:12:51 [14411]"
+      ]
+    }
+  }
+}

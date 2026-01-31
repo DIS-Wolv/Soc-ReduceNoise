@@ -1,0 +1,126 @@
+Jan 25 16:37:26 fedora unix_chkpwd[11479]: password check failed for user (kwata)
+Jan 25 16:37:26 fedora sudo[11468]: pam_unix(sudo:auth): authentication failure; logname=kwata uid=1000 euid=0 tty=/dev/pts/0 ruser=kwata rhost=  user=kwata
+Jan 25 16:37:32 fedora sudo[11468]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/wg-quick up wg11
+Jan 25 16:37:32 fedora sudo[11468]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 25 16:37:32 fedora sudo[11468]: pam_unix(sudo:session): session closed for user root
+Jan 25 16:37:34 fedora lightdm[2924]: pam_unix(lightdm:session): session closed for user kwata
+Jan 25 21:47:21 fedora lightdm[1972]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 25 21:47:21 fedora (systemd)[1980]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 25 21:47:33 fedora lightdm[2222]: gkr-pam: unable to locate daemon control file
+Jan 25 21:47:33 fedora lightdm[2222]: gkr-pam: stashed password to try later in open session
+Jan 25 21:47:33 fedora lightdm[1972]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 25 21:47:33 fedora (systemd)[2373]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 25 21:47:34 fedora lightdm[2222]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 25 21:47:34 fedora lightdm[2222]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 25 23:15:37 fedora lightdm[2222]: pam_unix(lightdm:session): session closed for user kwata
+Jan 26 13:34:45 fedora lightdm[1894]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 26 13:34:45 fedora (systemd)[1904]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 26 13:34:49 fedora lightdm[2146]: gkr-pam: unable to locate daemon control file
+Jan 26 13:34:49 fedora lightdm[2146]: gkr-pam: stashed password to try later in open session
+Jan 26 13:34:49 fedora lightdm[1894]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 26 13:34:50 fedora (systemd)[2237]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 26 13:34:50 fedora lightdm[2146]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 26 13:34:50 fedora lightdm[2146]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 26 13:40:33 fedora lightdm[2146]: pam_unix(lightdm:session): session closed for user kwata
+Jan 26 17:41:21 fedora lightdm[1927]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 26 17:41:21 fedora (systemd)[1950]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 26 17:41:25 fedora lightdm[2191]: gkr-pam: unable to locate daemon control file
+Jan 26 17:41:25 fedora lightdm[2191]: gkr-pam: stashed password to try later in open session
+Jan 26 17:41:25 fedora lightdm[1927]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 26 17:41:25 fedora (systemd)[2274]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 26 17:41:26 fedora lightdm[2191]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 26 17:41:26 fedora lightdm[2191]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 26 18:04:09 fedora sudo[7425]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/wg-quick up wg11
+Jan 26 18:04:09 fedora sudo[7425]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 26 18:04:09 fedora sudo[7425]: pam_unix(sudo:session): session closed for user root
+Jan 26 18:05:06 fedora sudo[8012]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/wg-quick down wg11
+Jan 26 18:05:06 fedora sudo[8012]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 26 18:05:06 fedora sudo[8012]: pam_unix(sudo:session): session closed for user root
+Jan 26 18:06:28 fedora sudo[8221]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/wg-quick up wg11
+Jan 26 18:06:28 fedora sudo[8221]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 26 18:06:28 fedora sudo[8221]: pam_unix(sudo:session): session closed for user root
+Jan 26 18:06:53 fedora sudo[8308]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/wg-quick down wg11
+Jan 26 18:06:53 fedora sudo[8308]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 26 18:06:53 fedora sudo[8308]: pam_unix(sudo:session): session closed for user root
+Jan 26 18:59:50 fedora sudo[12052]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/systemctl start libvirtd
+Jan 26 18:59:50 fedora sudo[12052]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 26 18:59:50 fedora sudo[12052]: pam_unix(sudo:session): session closed for user root
+Jan 26 20:32:34 fedora unix_chkpwd[18691]: password check failed for user (kwata)
+Jan 26 20:32:34 fedora i3lock[18672]: pam_unix(i3lock:auth): authentication failure; logname=kwata uid=1000 euid=1000 tty=:0 ruser= rhost=  user=kwata
+Jan 26 20:32:41 fedora unix_chkpwd[18698]: password check failed for user (kwata)
+Jan 26 23:16:36 fedora lightdm[2191]: pam_unix(lightdm:session): session closed for user kwata
+Jan 27 18:14:56 fedora lightdm[1963]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 27 18:14:56 fedora (systemd)[1971]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 27 18:15:13 fedora unix_chkpwd[2334]: password check failed for user (kwata)
+Jan 27 18:15:13 fedora lightdm[2212]: pam_unix(lightdm:auth): authentication failure; logname= uid=0 euid=0 tty=:0 ruser= rhost=  user=kwata
+Jan 27 18:15:13 fedora lightdm[2212]: gkr-pam: unable to locate daemon control file
+Jan 27 18:15:13 fedora lightdm[2212]: gkr-pam: stashed password to try later in open session
+Jan 27 18:15:22 fedora lightdm[2335]: gkr-pam: unable to locate daemon control file
+Jan 27 18:15:22 fedora lightdm[2335]: gkr-pam: stashed password to try later in open session
+Jan 27 18:15:22 fedora lightdm[1963]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 27 18:15:22 fedora (systemd)[2362]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 27 18:15:22 fedora lightdm[2335]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 27 18:15:22 fedora lightdm[2335]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 27 18:54:50 fedora sudo[8305]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/systemctl start libvirtd
+Jan 27 18:54:50 fedora sudo[8305]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 27 18:54:50 fedora sudo[8305]: pam_unix(sudo:session): session closed for user root
+Jan 27 19:22:37 fedora lightdm[2335]: pam_unix(lightdm:session): session closed for user kwata
+Jan 27 20:21:38 fedora lightdm[2050]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 27 20:21:38 fedora (systemd)[2058]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 27 20:21:42 fedora lightdm[2306]: gkr-pam: unable to locate daemon control file
+Jan 27 20:21:42 fedora lightdm[2306]: gkr-pam: stashed password to try later in open session
+Jan 27 20:21:42 fedora lightdm[2050]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 27 20:21:42 fedora (systemd)[2386]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 27 20:21:43 fedora lightdm[2306]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 27 20:21:43 fedora lightdm[2306]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 27 20:22:55 fedora sudo[3862]:   kwata : TTY=pts/0 ; PWD=/home/kwata ; USER=root ; COMMAND=/usr/sbin/systemctl start libvirtd
+Jan 27 20:22:55 fedora sudo[3862]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 27 20:22:55 fedora sudo[3862]: pam_unix(sudo:session): session closed for user root
+Jan 27 22:20:57 fedora lightdm[2306]: pam_unix(lightdm:session): session closed for user kwata
+Jan 27 22:22:07 fedora lightdm[1900]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 27 22:22:07 fedora (systemd)[1908]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 27 22:22:11 fedora lightdm[2161]: gkr-pam: unable to locate daemon control file
+Jan 27 22:22:11 fedora lightdm[2161]: gkr-pam: stashed password to try later in open session
+Jan 27 22:22:11 fedora lightdm[1900]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 27 22:22:12 fedora (systemd)[2282]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 27 22:22:12 fedora lightdm[2161]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 27 22:22:12 fedora lightdm[2161]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 28 00:09:41 fedora lightdm[2161]: pam_unix(lightdm:session): session closed for user kwata
+Jan 28 17:19:05 fedora lightdm[1910]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 28 17:19:06 fedora (systemd)[1917]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 28 17:19:14 fedora lightdm[2159]: gkr-pam: unable to locate daemon control file
+Jan 28 17:19:14 fedora lightdm[2159]: gkr-pam: stashed password to try later in open session
+Jan 28 17:19:14 fedora lightdm[1910]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 28 17:19:14 fedora (systemd)[2303]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 28 17:19:15 fedora lightdm[2159]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 28 17:19:15 fedora lightdm[2159]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 28 18:12:14 fedora sudo[12877]:   kwata : TTY=pts/0 ; PWD=/home/kwata/Documents/deving/Soc-ReduceNoise ; USER=root ; COMMAND=/usr/sbin/dnf upgrade
+Jan 28 18:12:15 fedora (systemd)[12892]: pam_unix(systemd-user:session): session opened for user root(uid=0) by root(uid=0)
+Jan 28 18:12:15 fedora sudo[12877]: pam_systemd(sudo:session): Failed to check if /run/user/0/bus exists, ignoring: Permission denied
+Jan 28 18:12:15 fedora sudo[12877]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 28 18:12:49 fedora (o-bridge)[14209]: pam_unix(login:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 28 18:12:49 fedora (sd-pam)[14211]: pam_unix(login:session): session closed for user kwata
+Jan 28 18:12:51 fedora (o-bridge)[14409]: pam_unix(login:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 28 18:12:51 fedora (sd-pam)[14411]: pam_unix(login:session): session closed for user kwata
+Jan 28 18:12:51 fedora sudo[12877]: pam_unix(sudo:session): session closed for user root
+Jan 28 18:40:36 fedora lightdm[2159]: pam_unix(lightdm:session): session closed for user kwata
+Jan 28 22:20:59 fedora lightdm[1928]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 28 22:20:59 fedora (systemd)[1934]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 28 22:21:04 fedora lightdm[2177]: gkr-pam: unable to locate daemon control file
+Jan 28 22:21:04 fedora lightdm[2177]: gkr-pam: stashed password to try later in open session
+Jan 28 22:21:04 fedora lightdm[1928]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 28 22:21:04 fedora (systemd)[2314]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 28 22:21:04 fedora lightdm[2177]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 28 22:21:04 fedora lightdm[2177]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 29 00:40:38 fedora lightdm[2177]: pam_unix(lightdm:session): session closed for user kwata
+Jan 29 18:34:14 fedora lightdm[3616]: pam_unix(lightdm-greeter:session): session opened for user lightdm(uid=987) by (uid=0)
+Jan 29 18:34:14 fedora (systemd)[3624]: pam_unix(systemd-user:session): session opened for user lightdm(uid=987) by lightdm(uid=0)
+Jan 29 18:34:19 fedora lightdm[3866]: gkr-pam: unable to locate daemon control file
+Jan 29 18:34:19 fedora lightdm[3866]: gkr-pam: stashed password to try later in open session
+Jan 29 18:34:19 fedora lightdm[3616]: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jan 29 18:34:19 fedora (systemd)[4004]: pam_unix(systemd-user:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 29 18:34:19 fedora lightdm[3866]: pam_unix(lightdm:session): session opened for user kwata(uid=1000) by kwata(uid=0)
+Jan 29 18:34:19 fedora lightdm[3866]: gkr-pam: gnome-keyring-daemon started properly and unlocked keyring
+Jan 29 18:39:58 fedora sudo[6506]:   kwata : TTY=pts/1 ; PWD=/var/log ; USER=root ; COMMAND=/usr/sbin/cat secure
+Jan 29 18:39:58 fedora sudo[6506]: pam_unix(sudo:session): session opened for user root(uid=0) by kwata(uid=1000)
+Jan 29 18:39:58 fedora sudo[6506]: pam_unix(sudo:session): session closed for user root
