@@ -5,7 +5,12 @@ import fs from 'fs';
 import { stat } from "node:fs/promises";
 
 // structure of record holder & fetch data
-type HostnameLogMap = Map<string, Map<string, Map<string, string[]>>>;
+type CmdbAsset = [Map<string, string|number>];
+type HostEntry = {
+    enrichment: CmdbAsset;
+    processes: Map<string, Map<string, string[]>>;
+};
+type HostnameLogMap = Map<string, HostEntry>;
 const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
 
 type CmdbResponse = {
@@ -27,9 +32,9 @@ let processedFileSizeInKB: number;
 
 async function main() {
     const result = await getData();
-    await gettingJSONFileSize(originalFilename);
+    // await gettingJSONFileSize(originalFilename);
     hostnameSegregationSyslog(result!);
-    await gettingJSONFileSize(processedFilename);
+    // await gettingJSONFileSize(processedFilename);
 }
 
 main().catch(console.error);
@@ -99,7 +104,6 @@ async function gettingJSONFileSize(_filename: string): Promise<void>{
  * @returns sortedLogsOnHostnameAndProcess
 */
 async function hostnameSegregationSyslog(_result: CmdbResponse){
-
     try {
         
         const logsToBeParsed = fs.readFileSync(originalFilename, "utf-8")       
@@ -108,22 +112,26 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
             .filter(Boolean)
             .map(line => line.replace(/^"(.*)",?$/, "$1"));
 
-        for (const log of logsToBeParsed) {
+            for (let i = 0; i< logsToBeParsed.length; i++) {
 
-            const hostnameMatch = log.match(regexToFetchHostnameSyslog);        
-            const processMatch = log.match(regexToFetchProcessSyslog);
-
-            if (!hostnameMatch || !hostnameMatch[1] ||                          // if not matching rg, start ew iteration 
-                !processMatch || !processMatch[1]) continue;                    // of the loop | safety check
-
-            const hostname = hostnameMatch[1];                                  
-            const process  = processMatch[1];
-
-            const separatorIndex = log.indexOf(": ");
-            if (separatorIndex === -1) continue;
-
-            const messageKey = log.slice(separatorIndex + 2);                   // message body (deduplication key)
-  
+                const log = logsToBeParsed[i];
+                if (!log || !logsToBeParsed[i]) continue; 
+                
+                const hostnameMatch = log.match(regexToFetchHostnameSyslog);        
+                const processMatch = log.match(regexToFetchProcessSyslog);
+                
+                if (!hostnameMatch || !hostnameMatch[1] ||                          // if not matching rg, start ew iteration 
+                    !processMatch || !processMatch[1]) continue;                    // of the loop | safety check
+                    
+                    const hostname = hostnameMatch[1];                                  
+                    const process  = processMatch[1];
+                    
+                    const separatorIndex = log.indexOf(": ");
+                    if (separatorIndex === -1) continue;
+                    
+                    const messageKey = log.slice(separatorIndex + 2);                   // message body (deduplication key)
+                    console.log(messageKey)
+                    /*
             let processMap = sortedLogsOnHostnameAndProcess.get(hostname)       // For each log, ensure the hostname map exists, 
             if (!processMap) {                                                  // ensure the process array exists, then push.
                 processMap = new Map<string, Map<string, string[]>>();          // returns HostnameLogMap type
@@ -151,10 +159,10 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
 
             occurrences.push(datePart);
 
-        }
+            }
 
-        const outputObj: Record<string, Record<string, Record<string, string[]>>> = {};         // Convert the nested Map structure (hostname → process → logs) 
-        for (const [hostname, processMap] of sortedLogsOnHostnameAndProcess) {     // into a plain object suitable for JSON serialization.
+            const outputObj: Record<string, Record<string, Record<string, string[]>>> = {};         // Convert the nested Map structure (hostname → process → logs) 
+            for (const [hostname, processMap] of sortedLogsOnHostnameAndProcess) {     // into a plain object suitable for JSON serialization.
             outputObj[hostname] = {};                                           // sets top level JSON key
             
             for (const [process, messageMap] of processMap) {
@@ -164,13 +172,14 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
                     outputObj[hostname][process][message] = dates;
                 }
             }
+            */
         }
-
-        fs.writeFileSync(processedFilename, JSON                                // wrtie to processedFilename
-            .stringify(outputObj, null, 2), "utf-8");
+        
+        //fs.writeFileSync(processedFilename, JSON                                // wrtie to processedFilename
+        //    .stringify(outputObj, null, 2), "utf-8");
 
     } catch (error) {
-        console.error("Error | couldn't segregate logs based on hostnames", error);
+        console.error(error);
         throw error;
     }
 }
