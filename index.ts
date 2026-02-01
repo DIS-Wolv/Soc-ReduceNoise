@@ -4,17 +4,78 @@
 import fs from 'fs';
 import { stat } from "node:fs/promises";
 
-const originalFilename: string = "rooty.json";
-const processedFilename:string = "rooty_processed.json";
+// structure of record holder & fetch data
+type HostnameLogMap = Map<string, Map<string, Map<string, string[]>>>;
+const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
+
+type CmdbResponse = {
+  total: number;                                                                // for page collection
+  rows: unknown[];
+};
+
+const originalFilename: string = "messages.json";
+const processedFilename:string = "processed.json";
 const regexToFetchHostnameSyslog = /^\S+\s+\S+\s+\S+\s+(\S+)/;
 const regexToFetchProcessSyslog = /^\S+\s+\S+\s+\S+\s+\S+\s+([^\s\[:]+)(?:\[\d+\])?:/;
 
 let originalFileSizeInKB: number;
 let processedFileSizeInKB: number;
 
-// structure of record holder
-type HostnameLogMap =   Map<string, Map<string, Map<string, string[]>>>;
-const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
+/**
+ * Calling functions
+ */
+
+async function main() {
+    const result = await getData();
+    await gettingJSONFileSize(originalFilename);
+    hostnameSegregationSyslog(result!);
+    await gettingJSONFileSize(processedFilename);
+}
+
+main().catch(console.error);
+
+/**
+ * fetch data on snipe it API
+ * 
+ * @returns result
+ */
+async function getData(): Promise<CmdbResponse | undefined> {
+    const url: string = process.env.URL!;
+    const token: string = process.env.API!;
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    try{
+
+        const response = await fetch(url,{
+            method: "GET",
+            headers:{
+                "Accept": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            signal: controller.signal
+        });
+
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+        
+        const result = await response.json() as CmdbResponse;
+
+        if (!result || !Array.isArray(result.rows)) {
+            throw new Error("Invalid CMDB response shape");
+        }
+        
+        return result;
+
+    }catch(error){
+        console.error(error);
+    } finally {
+        clearTimeout(timeout);
+    }
+
+}
 
 
 /**
@@ -23,15 +84,11 @@ const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
  */
 async function gettingJSONFileSize(_filename: string): Promise<void>{
     const statResult = await stat(_filename);
-    console.log(_filename)
     const fileSize = statResult.size / 1024;
 
     (_filename == "original.json") ? 
         originalFileSizeInKB    =   fileSize:
         processedFileSizeInKB   =   fileSize;
-
-    await console.log(typeof(processedFileSizeInKB) )
-    await console.log(typeof(originalFileSizeInKB) )
 
     console.info(`---> ${_filename} has a size of ${Math.floor(fileSize)} KB`);
 }
@@ -41,7 +98,7 @@ async function gettingJSONFileSize(_filename: string): Promise<void>{
  * Preprocessor function 
  * @returns sortedLogsOnHostnameAndProcess
 */
-function hostnameSegregationSyslog(){
+async function hostnameSegregationSyslog(_result: CmdbResponse){
 
     try {
         
@@ -108,8 +165,6 @@ function hostnameSegregationSyslog(){
                 }
             }
         }
-        
-
 
         fs.writeFileSync(processedFilename, JSON                                // wrtie to processedFilename
             .stringify(outputObj, null, 2), "utf-8");
@@ -119,32 +174,3 @@ function hostnameSegregationSyslog(){
         throw error;
     }
 }
-
-/**
- * Calling functions
- */
-
-async function main() {
-    await gettingJSONFileSize(originalFilename);
-    hostnameSegregationSyslog();
-    await gettingJSONFileSize(processedFilename);
-   //await console.log(Math.floor((processedFileSizeInKB / originalFileSizeInKB)*100))
-}
-
-main().catch(console.error);
-
-/**
- * Normalize timestamps → store as ISO or epoch for easier sorting/comparison.
-
-Optional PID metadata → keep PID separate from date string for flexibility.
-
-Message normalization → replace volatile data (IPs, UUIDs, user IDs) for better deduplication.
-
-Async I/O → use fs.promises for reading/writing large files to avoid blocking.
-
-Memory optimization → consider streaming large files instead of loading all logs at once.
-
-Add counts / firstSeen / lastSeen → easier analytics without parsing arrays.
-
-Configurable keys → allow toggling PID inclusion or message normalization.
- */
