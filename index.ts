@@ -112,71 +112,81 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
             .filter(Boolean)
             .map(line => line.replace(/^"(.*)",?$/, "$1"));
 
-            for (let i = 0; i< logsToBeParsed.length; i++) {
+        //for (let i = 0; i< logsToBeParsed.length; i++) {
+        for (let i = 0; i < logsToBeParsed.length; i++) {
 
-                const log = logsToBeParsed[i];
-                if (!log || !logsToBeParsed[i]) continue; 
+            const log = logsToBeParsed[i];
+            if (!log || !logsToBeParsed[i]) continue; 
+            
+            const hostnameMatch = log.match(regexToFetchHostnameSyslog);        
+            const processMatch = log.match(regexToFetchProcessSyslog);
+            
+            if (!hostnameMatch || !hostnameMatch[1] ||                          // if not matching rg, start ew iteration 
+                    !processMatch || !processMatch[1]) continue;                // of the loop | safety check
+                    
+                const hostname = hostnameMatch[1];                                  
+                const process  = processMatch[1];
                 
-                const hostnameMatch = log.match(regexToFetchHostnameSyslog);        
-                const processMatch = log.match(regexToFetchProcessSyslog);
+                const separatorIndex = log.indexOf(": ");
+                if (separatorIndex === -1) continue;
                 
-                if (!hostnameMatch || !hostnameMatch[1] ||                          // if not matching rg, start ew iteration 
-                    !processMatch || !processMatch[1]) continue;                    // of the loop | safety check
+                const messageKey = log.slice(separatorIndex + 2);               // message body (deduplication key)
+                
+                let sortLog = sortedLogsOnHostnameAndProcess.get(hostname);     // For each log, ensure the hostname map exists, 
+                
+                if (!sortLog) {                                                 // ensure the process array exists, then push.
                     
-                    const hostname = hostnameMatch[1];                                  
-                    const process  = processMatch[1];
-                    
-                    const separatorIndex = log.indexOf(": ");
-                    if (separatorIndex === -1) continue;
-                    
-                    const messageKey = log.slice(separatorIndex + 2);                   // message body (deduplication key)
-                    console.log(messageKey)
-                    /*
-            let processMap = sortedLogsOnHostnameAndProcess.get(hostname)       // For each log, ensure the hostname map exists, 
-            if (!processMap) {                                                  // ensure the process array exists, then push.
-                processMap = new Map<string, Map<string, string[]>>();          // returns HostnameLogMap type
-                sortedLogsOnHostnameAndProcess.set(hostname, processMap);
+                    sortLog = {
+                        enrichment:[
+                            new Map<string, string | number>([
+                                ["key", "pute"],
+                            ])
+                        ],
+                        processes: new Map<string, Map<string, string[]>>()
+                    };
+                      
+                    // returns HostnameLogMap type
+                    sortedLogsOnHostnameAndProcess.set(hostname, sortLog);
+                }
+            
+                let messageMap = sortLog.processes.get(process);                          // reiterate process for process
+                if (!messageMap) {                                  
+                    messageMap = new Map<string, string[]>();
+                    sortLog.processes.set(process, messageMap);                        // it adds the message
+                }
+            
+                let occurrences = messageMap.get(messageKey);                   // check the log message
+                if (!occurrences) {
+                    occurrences = [];
+                    messageMap.set(messageKey, occurrences);                        
+                }
+            
+                const timestamp = log.split(" ", 4).slice(0, 3).join(" ");      // process and push date 
+                const pidMatch = log.match(/\[(\d+)\]/);
+                const pid = pidMatch ? pidMatch[1] : undefined;
+                const datePart = pid
+                    ? `${timestamp} [${pid}]`
+                    : timestamp;
+            
+                occurrences.push(datePart);
+            
             }
-
-            let messageMap = processMap.get(process);                           // reiterate process for process
-            if (!messageMap) {                                  
-                messageMap = new Map<string, string[]>();
-                processMap.set(process, messageMap);                            // it adds the message
-            }
-
-            let occurrences = messageMap.get(messageKey);                       // check the log message
-            if (!occurrences) {
-                occurrences = [];
-                messageMap.set(messageKey, occurrences);                        
-            }
-
-            const timestamp = log.split(" ", 4).slice(0, 3).join(" ");          // process and push date 
-            const pidMatch = log.match(/\[(\d+)\]/);
-            const pid = pidMatch ? pidMatch[1] : undefined;
-            const datePart = pid
-                ? `${timestamp} [${pid}]`
-                : timestamp;
-
-            occurrences.push(datePart);
-
-            }
-
             const outputObj: Record<string, Record<string, Record<string, string[]>>> = {};         // Convert the nested Map structure (hostname → process → logs) 
-            for (const [hostname, processMap] of sortedLogsOnHostnameAndProcess) {     // into a plain object suitable for JSON serialization.
+            for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {     // into a plain object suitable for JSON serialization.
             outputObj[hostname] = {};                                           // sets top level JSON key
             
-            for (const [process, messageMap] of processMap) {
-                outputObj[hostname][process] = {};                               // sets sub structure savec in above one
+            for (const [process, messageMap] of processEntry.processes) {
+                outputObj[hostname][process] = {};                              // sets sub structure savec in above one
                 
                 for (const [message, dates] of messageMap) {
                     outputObj[hostname][process][message] = dates;
                 }
             }
-            */
-        }
+            
+            }
         
-        //fs.writeFileSync(processedFilename, JSON                                // wrtie to processedFilename
-        //    .stringify(outputObj, null, 2), "utf-8");
+        fs.writeFileSync(processedFilename, JSON                                // write to processedFilename
+            .stringify(outputObj, null, 2), "utf-8");
 
     } catch (error) {
         console.error(error);
