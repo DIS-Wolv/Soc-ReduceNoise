@@ -33,7 +33,7 @@ let processedFileSizeInKB: number;
 async function main() {
     const result = await getData();
     // await gettingJSONFileSize(originalFilename);
-    hostnameSegregationSyslog(result!);
+    //hostnameSegregationSyslog(result!);
     // await gettingJSONFileSize(processedFilename);
 }
 
@@ -112,8 +112,7 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
             .filter(Boolean)
             .map(line => line.replace(/^"(.*)",?$/, "$1"));
 
-        //for (let i = 0; i< logsToBeParsed.length; i++) {
-        for (let i = 0; i < logsToBeParsed.length; i++) {
+        for (let i = 0; i < 9; i++) {
 
             const log = logsToBeParsed[i];
             if (!log || !logsToBeParsed[i]) continue; 
@@ -171,19 +170,37 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
                 occurrences.push(datePart);
             
             }
-            const outputObj: Record<string, Record<string, Record<string, string[]>>> = {};         // Convert the nested Map structure (hostname → process → logs) 
-            for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {     // into a plain object suitable for JSON serialization.
-            outputObj[hostname] = {};                                           // sets top level JSON key
             
-            for (const [process, messageMap] of processEntry.processes) {
-                outputObj[hostname][process] = {};                              // sets sub structure savec in above one
+
+        type SerializedCmdbAsset = Array<Record<string, string | number>>;
+        type SerializedProcesses = Record<string, Record<string, string[]>>;
                 
+        type SerializedHostEntry = {
+            enrichment: SerializedCmdbAsset;
+            processes: SerializedProcesses;
+        };
+        
+        type SerializedHostnameLogs = Record<string, SerializedHostEntry>;
+        const outputObj: SerializedHostnameLogs = {};
+
+        for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {
+
+            outputObj[hostname] = {
+                enrichment: processEntry.enrichment.map(m => Object.fromEntries(m)),
+                processes: {}
+            };
+
+            for (const [process, messageMap] of processEntry.processes) {
+                outputObj[hostname].processes[process] = {};
+
                 for (const [message, dates] of messageMap) {
-                    outputObj[hostname][process][message] = dates;
+                    outputObj[hostname].processes[process][message] = dates;
                 }
             }
-            
-            }
+
+            console.log(outputObj)
+        }
+
         
         fs.writeFileSync(processedFilename, JSON                                // write to processedFilename
             .stringify(outputObj, null, 2), "utf-8");
