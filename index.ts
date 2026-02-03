@@ -18,7 +18,7 @@ type CmdbResponse = {
   rows: unknown[];
 };
 
-const originalFilename: string = "messages.json";
+const originalFilename: string = "dodi_center.json";
 const processedFilename:string = "processed.json";
 const regexToFetchHostnameSyslog = /^\S+\s+\S+\s+\S+\s+(\S+)/;
 const regexToFetchProcessSyslog = /^\S+\s+\S+\s+\S+\s+\S+\s+([^\s\[:]+)(?:\[\d+\])?:/;
@@ -26,18 +26,19 @@ const regexToFetchProcessSyslog = /^\S+\s+\S+\s+\S+\s+\S+\s+([^\s\[:]+)(?:\[\d+\
 let originalFileSizeInKB: number;
 let processedFileSizeInKB: number;
 
+
 /**
  * Calling functions
  */
-
 async function main() {
     const result = await getData();
-    // await gettingJSONFileSize(originalFilename);
-    //hostnameSegregationSyslog(result!);
-    // await gettingJSONFileSize(processedFilename);
+    await gettingJSONFileSize(originalFilename);
+    hostnameSegregationSyslog(result!);
+    await gettingJSONFileSize(processedFilename);
 }
 
 main().catch(console.error);
+
 
 /**
  * fetch data on snipe it API
@@ -112,7 +113,7 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
             .filter(Boolean)
             .map(line => line.replace(/^"(.*)",?$/, "$1"));
 
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < logsToBeParsed.length; i++) {
 
             const log = logsToBeParsed[i];
             if (!log || !logsToBeParsed[i]) continue; 
@@ -197,8 +198,6 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
                     outputObj[hostname].processes[process][message] = dates;
                 }
             }
-
-            console.log(outputObj)
         }
 
         

@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "fs/promises";
 
-const inputFile = "messages.txt";
-const outputFile = "messages.json";
+const inputFile = "dodi_center.txt";
+const outputFile = "dodi_center.json";
 
 // 1. Read the TXT file
 const content = await readFile(inputFile, "utf8");
