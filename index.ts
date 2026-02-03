@@ -4,26 +4,25 @@
 import fs from 'fs';
 import { stat } from "node:fs/promises";
 
-// structure of record holder & fetch data
-type CmdbAsset = [Map<string, string|number>];
+type CmdbAsset = [Map<string, string|number>];                                  // cmdb data
 type HostEntry = {
     enrichment: CmdbAsset;
-    processes: Map<string, Map<string, string[]>>;
+    processes: Map<string, Map<string, string[]>>;                              // process name -> log msg, dates[]
 };
-type HostnameLogMap = Map<string, HostEntry>;
-const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
+type HostnameLogMap = Map<string, HostEntry>;                                   // hostname, HostEntry
+const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();               
 
 type CmdbResponse = {
-  total: number;                                                                // for page collection
+  total: number;                                                                // API response handler, total being for pagination
   rows: unknown[];
 };
 
-const originalFilename: string = "dodi_center.json";
+const originalFilename: string = "dodi_center.json";                            
 const processedFilename:string = "processed.json";
 const regexToFetchHostnameSyslog = /^\S+\s+\S+\s+\S+\s+(\S+)/;
 const regexToFetchProcessSyslog = /^\S+\s+\S+\s+\S+\s+\S+\s+([^\s\[:]+)(?:\[\d+\])?:/;
 
-let originalFileSizeInKB: number;
+let originalFileSizeInKB: number;                                               
 let processedFileSizeInKB: number;
 
 
@@ -31,26 +30,25 @@ let processedFileSizeInKB: number;
  * Calling functions
  */
 async function main() {
-    const result = await getData();
+    const cmdb = await getData();                                 
     await gettingJSONFileSize(originalFilename);
-    hostnameSegregationSyslog(result!);
+    hostnameSegregationSyslog(cmdb!);
     await gettingJSONFileSize(processedFilename);
+    console.log(`A ${Math.floor(100 - (processedFileSizeInKB/originalFileSizeInKB) *100) }% gain`)
 }
-
 main().catch(console.error);
 
 
 /**
  * fetch data on snipe it API
- * 
  * @returns result
  */
 async function getData(): Promise<CmdbResponse | undefined> {
     const url: string = process.env.URL!;
     const token: string = process.env.API!;
     
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const controller = new AbortController();                                   // kill switch
+    const timeout = setTimeout(() => controller.abort(), 5000);                 // function to kill process if no response upon signal
 
     try{
 
@@ -60,41 +58,40 @@ async function getData(): Promise<CmdbResponse | undefined> {
                 "Accept": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            signal: controller.signal
+            signal: controller.signal                                           // signal for kill switch
         });
 
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
         
-        const result = await response.json() as CmdbResponse;
+        const cmdbData = await response.json() as CmdbResponse;
 
-        if (!result || !Array.isArray(result.rows)) {
+        if (!cmdbData || !Array.isArray(cmdbData.rows)) {
             throw new Error("Invalid CMDB response shape");
         }
         
-        return result;
+        return cmdbData;
 
     }catch(error){
         console.error(error);
     } finally {
-        clearTimeout(timeout);
+        clearTimeout(timeout);                                                  // clear timer
     }
 
 }
 
 
 /**
- * getting file size 
+ * getting file size - self explenatory
  * @param _filename 
  */
 async function gettingJSONFileSize(_filename: string): Promise<void>{
     const statResult = await stat(_filename);
     const fileSize = statResult.size / 1024;
 
-    (_filename == "original.json") ? 
-        originalFileSizeInKB    =   fileSize:
-        processedFileSizeInKB   =   fileSize;
+    (_filename == originalFilename) ? 
+        originalFileSizeInKB = fileSize : processedFileSizeInKB = fileSize;
 
     console.info(`---> ${_filename} has a size of ${Math.floor(fileSize)} KB`);
 }
@@ -104,10 +101,10 @@ async function gettingJSONFileSize(_filename: string): Promise<void>{
  * Preprocessor function 
  * @returns sortedLogsOnHostnameAndProcess
 */
-async function hostnameSegregationSyslog(_result: CmdbResponse){
+async function hostnameSegregationSyslog(_cmdb: CmdbResponse){
     try {
         
-        const logsToBeParsed = fs.readFileSync(originalFilename, "utf-8")       
+        const logsToBeParsed = fs.readFileSync(originalFilename, "utf-8")       // parsing json
             .split("\n")
             .map(line => line.trim())
             .filter(Boolean)
@@ -116,13 +113,13 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
         for (let i = 0; i < logsToBeParsed.length; i++) {
 
             const log = logsToBeParsed[i];
-            if (!log || !logsToBeParsed[i]) continue; 
+            if (!log || !logsToBeParsed[i]) continue;
             
             const hostnameMatch = log.match(regexToFetchHostnameSyslog);        
             const processMatch = log.match(regexToFetchProcessSyslog);
             
-            if (!hostnameMatch || !hostnameMatch[1] ||                          // if not matching rg, start ew iteration 
-                    !processMatch || !processMatch[1]) continue;                // of the loop | safety check
+            if (!hostnameMatch || !hostnameMatch[1] ||                          // if not matching rg, continue to new iteration 
+                    !processMatch || !processMatch[1]) continue;                
                     
                 const hostname = hostnameMatch[1];                                  
                 const process  = processMatch[1];
@@ -131,7 +128,6 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
                 if (separatorIndex === -1) continue;
                 
                 const messageKey = log.slice(separatorIndex + 2);               // message body (deduplication key)
-                
                 let sortLog = sortedLogsOnHostnameAndProcess.get(hostname);     // For each log, ensure the hostname map exists, 
                 
                 if (!sortLog) {                                                 // ensure the process array exists, then push.
@@ -149,10 +145,10 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
                     sortedLogsOnHostnameAndProcess.set(hostname, sortLog);
                 }
             
-                let messageMap = sortLog.processes.get(process);                          // reiterate process for process
+                let messageMap = sortLog.processes.get(process);                // reiterate process for process
                 if (!messageMap) {                                  
                     messageMap = new Map<string, string[]>();
-                    sortLog.processes.set(process, messageMap);                        // it adds the message
+                    sortLog.processes.set(process, messageMap);                 // it adds the message
                 }
             
                 let occurrences = messageMap.get(messageKey);                   // check the log message
@@ -171,9 +167,8 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
                 occurrences.push(datePart);
             
             }
-            
 
-        type SerializedCmdbAsset = Array<Record<string, string | number>>;
+        type SerializedCmdbAsset = Array<Record<string, string | number>>;      // rewrite Map struc. to Record for JSON serialization
         type SerializedProcesses = Record<string, Record<string, string[]>>;
                 
         type SerializedHostEntry = {
@@ -184,7 +179,7 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
         type SerializedHostnameLogs = Record<string, SerializedHostEntry>;
         const outputObj: SerializedHostnameLogs = {};
 
-        for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {
+        for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {    // serialization of the data struc
 
             outputObj[hostname] = {
                 enrichment: processEntry.enrichment.map(m => Object.fromEntries(m)),
@@ -201,7 +196,7 @@ async function hostnameSegregationSyslog(_result: CmdbResponse){
         }
 
         
-        fs.writeFileSync(processedFilename, JSON                                // write to processedFilename
+        fs.writeFileSync(processedFilename, JSON                                // write to JSON file
             .stringify(outputObj, null, 2), "utf-8");
 
     } catch (error) {
