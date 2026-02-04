@@ -4,7 +4,7 @@
 import fs from 'fs';
 import { stat } from "node:fs/promises";
 
-type CmdbAsset = [Map<string, string|number>];                                  // cmdb data
+type CmdbAsset = Map<string, string|number>[];                                  // cmdb data
 type HostEntry = {
     enrichment: CmdbAsset;
     processes: Map<string, Map<string, string[]>>;                              // process name -> log msg, dates[]
@@ -132,17 +132,51 @@ async function hostnameSegregationSyslog(_cmdb: CmdbResponse){
                 
                 if (!sortLog) {                                                 // ensure the process array exists, then push.
                     
+                    type CmdbCustomField = {
+                        value: string | number;
+                    };
+
+                    type CmdbRow = {
+                        id: number;
+                        name: string;
+                        custom_fields: {
+                            hostname?: CmdbCustomField;
+                            ip?: CmdbCustomField;
+                            environment?: CmdbCustomField;
+                            owner?: CmdbCustomField;
+                        };
+                    };
+
+                    type CmdbResponse = {
+                        total: number;
+                        rows: CmdbRow[];
+                    };
+                    
+                    const cmdbRow = (_cmdb.rows as CmdbRow[]).find(
+                        row => row.custom_fields.hostname?.value === hostname
+                    );
+
+                    const enrichmentMap = new Map<string, string | number>();
+
+                    if (cmdbRow) {
+                        if (cmdbRow.custom_fields.hostname)
+                            enrichmentMap.set("hostname", cmdbRow.custom_fields.hostname.value);
+
+                        if (cmdbRow.custom_fields.ip)
+                           enrichmentMap.set("IP", cmdbRow.custom_fields.ip.value);
+                        if (cmdbRow.custom_fields.environment)
+                           enrichmentMap.set("Environment", cmdbRow.custom_fields.environment.value);
+                        if (cmdbRow.custom_fields.owner)
+                           enrichmentMap.set("Owner", cmdbRow.custom_fields.owner.value);
+                    }
+
                     sortLog = {
-                        enrichment:[
-                            new Map<string, string | number>([
-                                ["key", "pute"],
-                            ])
-                        ],
+                        enrichment: enrichmentMap.size > 0 ? [enrichmentMap] : [],
                         processes: new Map<string, Map<string, string[]>>()
                     };
+
                       
-                    // returns HostnameLogMap type
-                    sortedLogsOnHostnameAndProcess.set(hostname, sortLog);
+                    sortedLogsOnHostnameAndProcess.set(hostname, sortLog);      // returns HostnameLogMap type
                 }
             
                 let messageMap = sortLog.processes.get(process);                // reiterate process for process
