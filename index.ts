@@ -5,9 +5,14 @@ import fs from 'fs';
 import { stat } from "node:fs/promises";
 
 type CmdbAsset = Map<string, string|number>[];                                  // cmdb data
+type ProcessMessageEntry = {
+    message: string;
+    occurrences: string[];
+};
+
 type HostEntry = {
     enrichment: CmdbAsset;
-    processes: Map<string, Map<string, string[]>>;                              // process name -> log msg, dates[]
+    processes: Map<string, ProcessMessageEntry[]>;
 };
 type HostnameLogMap = Map<string, HostEntry>;                                   // hostname, HostEntry
 const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();               
@@ -30,13 +35,16 @@ let processedFileSizeInKB: number;
  * Calling functions
  */
 async function main() {
+    console.time()
     const cmdb = await getData();                                 
     await gettingJSONFileSize(originalFilename);
     hostnameSegregationSyslog(cmdb!);
     await gettingJSONFileSize(processedFilename);
     console.log(`A ${Math.floor(100 - (processedFileSizeInKB/originalFileSizeInKB) *100) }% gain`)
+    console.timeEnd()
 }
 main().catch(console.error);
+
 
 
 /**
@@ -172,23 +180,23 @@ async function hostnameSegregationSyslog(_cmdb: CmdbResponse){
 
                     sortLog = {
                         enrichment: enrichmentMap.size > 0 ? [enrichmentMap] : [],
-                        processes: new Map<string, Map<string, string[]>>()
+                        processes: new Map<string, ProcessMessageEntry[]>()
                     };
 
                       
                     sortedLogsOnHostnameAndProcess.set(hostname, sortLog);      // returns HostnameLogMap type
                 }
             
-                let messageMap = sortLog.processes.get(process);                // reiterate process for process
-                if (!messageMap) {                                  
-                    messageMap = new Map<string, string[]>();
-                    sortLog.processes.set(process, messageMap);                 // it adds the message
+                let messageEntries = sortLog.processes.get(process);
+                if (!messageEntries) {
+                    messageEntries = [];
+                    sortLog.processes.set(process, messageEntries);
                 }
-            
-                let occurrences = messageMap.get(messageKey);                   // check the log message
-                if (!occurrences) {
-                    occurrences = [];
-                    messageMap.set(messageKey, occurrences);                        
+
+                let entry = messageEntries.find(e => e.message === messageKey);
+                if (!entry) {
+                    entry = { message: messageKey, occurrences: [] };
+                    messageEntries.push(entry);
                 }
             
                 const timestamp = log.split(" ", 4).slice(0, 3).join(" ");      // process and push date 
@@ -198,36 +206,45 @@ async function hostnameSegregationSyslog(_cmdb: CmdbResponse){
                     ? `${timestamp} [${pid}]`
                     : timestamp;
             
-                occurrences.push(datePart);
+                entry.occurrences.push(datePart);
             
             }
 
-        type SerializedCmdbAsset = Array<Record<string, string | number>>;      // rewrite Map struc. to Record for JSON serialization
-        type SerializedProcesses = Record<string, Record<string, string[]>>;
-                
-        type SerializedHostEntry = {
-            enrichment: SerializedCmdbAsset;
-            processes: SerializedProcesses;
-        };
-        
-        type SerializedHostnameLogs = Record<string, SerializedHostEntry>;
-        const outputObj: SerializedHostnameLogs = {};
+            type SerializedCmdbAsset = Array<Record<string, string | number>>;
 
-        for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {    // serialization of the data struc
-
-            outputObj[hostname] = {
-                enrichment: processEntry.enrichment.map(m => Object.fromEntries(m)),
-                processes: {}
+            type SerializedProcessMessage = {
+                message: string;
+                occurrences: string[];
             };
 
-            for (const [process, messageMap] of processEntry.processes) {
-                outputObj[hostname].processes[process] = {};
+            type SerializedProcesses = Record<string, SerializedProcessMessage[]>;
 
-                for (const [message, dates] of messageMap) {
-                    outputObj[hostname].processes[process][message] = dates;
+            type SerializedHostEntry = {
+                enrichment: SerializedCmdbAsset;
+                processes: SerializedProcesses;
+            };
+
+            type SerializedHostnameLogs = Record<string, SerializedHostEntry>;
+
+            const outputObj: SerializedHostnameLogs = {};
+
+            for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {
+
+                outputObj[hostname] = {
+                    enrichment: processEntry.enrichment.map(m => Object.fromEntries(m)),
+                    processes: {}
+                };
+
+                for (const [process, messageEntries] of processEntry.processes) {
+
+                    outputObj[hostname].processes[process] =
+                        messageEntries.map(entry => ({
+                            message: entry.message,
+                            occurrences: entry.occurrences
+                        }));
                 }
             }
-        }
+
 
         
         fs.writeFileSync(processedFilename, JSON                                // write to JSON file
