@@ -76,7 +76,7 @@ type ProcessMessageEntry = {
     occurrences: string[];
 };
 
-// Optimized: Map for O(1) lookup of messages per process
+// Map for O(1) lookup of messages per process
 type ProcessMessageMap = Map<string, ProcessMessageEntry>;
 
 type HostEntry = {
