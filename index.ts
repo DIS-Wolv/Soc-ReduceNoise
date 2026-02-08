@@ -4,7 +4,7 @@
 import fs from 'fs';
 import { stat } from "node:fs/promises";
 
-type CmdbAsset = Map<string, string | number>[];                                  // cmdb data
+type CmdbAsset = Map<string, string | number>[];                                 
 type ProcessMessageEntry = {
     message: string;
     occurrences: string[];
@@ -14,12 +14,18 @@ type HostEntry = {
     enrichment: CmdbAsset;
     processes: Map<string, ProcessMessageEntry[]>;
 };
-type HostnameLogMap = Map<string, HostEntry>;                                   // hostname, HostEntry
+type HostnameLogMap = Map<string, HostEntry>;                                   
 const sortedLogsOnHostnameAndProcess: HostnameLogMap = new Map();
 
 type CmdbResponse = {
-    total: number;                                                                // API response handler, total being for pagination
+    total: number;                                                                
     rows: unknown[];
+};
+
+type CmdbRow = {
+    id: number;
+    name: string;
+    custom_fields: CmdbCustomFields;
 };
 
 const originalFilename: string = "dodi_center.json";
@@ -55,7 +61,6 @@ const CustomFieldsKeys: string[] = [
 ] as const;
 
 type CustomFieldKey = typeof CustomFieldsKeys[number];
-// ensure the process array exists, then push.
 
 type CmdbCustomField = {
     value: string | number;
@@ -65,33 +70,51 @@ type CmdbCustomFields = {
     [K in CustomFieldKey]?: CmdbCustomField;
 };
 
+type SerializedCmdbAsset = Array<Record<string, string | number>>;
+
+type SerializedProcessMessage = {
+    message: string;
+    occurrences: string[];
+};
+
+type SerializedProcesses = Record<string, SerializedProcessMessage[]>;
+
+type SerializedHostEntry = {
+    enrichment: SerializedCmdbAsset;
+    processes: SerializedProcesses;
+};
+
+type SerializedHostnameLogs = Record<string, SerializedHostEntry>;
+
 
 /**
- * Calling functions
+ * Main thread
  */
 async function main() {
-    //console.time()
-    const cmdb = await getData();
+    const cmdb = await fetchDataFromSnipeIT();
+    if (!cmdb) throw new Error("No CMDB data");
+
     await gettingJSONFileSize(originalFilename);
-    hostnameSegregationSyslog(cmdb!);
+
+    preprocessingLogs(cmdb);
     await gettingJSONFileSize(processedFilename);
+
     console.log(`A ${Math.floor(100 - (processedFileSizeInKB / originalFileSizeInKB) * 100)}% gain`)
-    //console.timeEnd()
 }
 main().catch(console.error);
 
 
-
 /**
- * fetch data on snipe it API
  * @returns result
  */
-async function getData(): Promise<CmdbResponse | undefined> {
+async function fetchDataFromSnipeIT(): Promise<CmdbResponse | undefined> {
     const url: string = process.env.URL!;
     const token: string = process.env.API!;
 
-    const controller = new AbortController();                                   // kill switch
-    const timeout = setTimeout(() => controller.abort(), 5000);                 // function to kill process if no response upon signal
+    // kill switch
+    const controller = new AbortController();
+    // function to kill process if no response upon signal                           
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
     try {
 
@@ -101,7 +124,8 @@ async function getData(): Promise<CmdbResponse | undefined> {
                 "Accept": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            signal: controller.signal                                           // signal for kill switch
+            // signal for kill switch
+            signal: controller.signal
         });
 
         if (!response.ok) {
@@ -119,14 +143,14 @@ async function getData(): Promise<CmdbResponse | undefined> {
     } catch (error) {
         console.error(error);
     } finally {
-        clearTimeout(timeout);                                                  // clear timer
+        // clear timer
+        clearTimeout(timeout);
     }
 
 }
 
 
 /**
- * getting file size - self explenatory
  * @param _filename 
  */
 async function gettingJSONFileSize(_filename: string): Promise<void> {
@@ -141,176 +165,211 @@ async function gettingJSONFileSize(_filename: string): Promise<void> {
 
 
 /**
- * Preprocessor function 
+ * Preprocessor main function 
  * @returns sortedLogsOnHostnameAndProcess
 */
-async function hostnameSegregationSyslog(_cmdb: CmdbResponse) {
-    console.time("process")
+async function preprocessingLogs(_cmdb: CmdbResponse) {
+
     try {
+        const logsToBeParsed = sortLogsToBeparsed();
 
-        const logsToBeParsed = fs.readFileSync(originalFilename, "utf-8")       // parsing json
-            .split("\n")
-            .map(line => line.trim())
-            .filter(Boolean)
-            .map(line => line.replace(/^"(.*)",?$/, "$1"));
+        trimmingAndEnrichingLogs(_cmdb, logsToBeParsed);
 
-        for (let i = 0; i < logsToBeParsed.length; i++) {
+        const serializedLogs = logSerialization();
 
-            const log = logsToBeParsed[i];
-            if (!log || !logsToBeParsed[i]) continue;
-
-            const hostnameMatch = log.match(regexToFetchHostnameSyslog);
-            const processMatch = log.match(regexToFetchProcessSyslog);
-
-            if (!hostnameMatch || !hostnameMatch[1] ||                          // if not matching rg, continue to new iteration 
-                !processMatch || !processMatch[1]) continue;
-
-            const hostname = hostnameMatch[1];
-            const process = processMatch[1];
-
-            const separatorIndex = log.indexOf(": ");
-            if (separatorIndex === -1) continue;
-
-            const messageKey = log.slice(separatorIndex + 2);               // message body (deduplication key)
-            let sortLog = sortedLogsOnHostnameAndProcess.get(hostname);     // For each log, ensure the hostname map exists, 
-
-            if (!sortLog) {
-
-                type CmdbRow = {
-                    id: number;
-                    name: string;
-                    custom_fields: CmdbCustomFields;
-                };
-
-                const cmdbRow = (_cmdb.rows as CmdbRow[]).find(
-                    row => row.custom_fields.hostname?.value === hostname
-                );
-
-                const enrichmentMap = new Map<string, string | number>();
-                let likelyhood: number | null = null;
-                let impact: number | null = null;
-                let criticality: number | null = null;
-                let dataSensitivity: number | null = null;
-
-                if (cmdbRow) {
-
-                    for (let i = 0; i < CustomFieldsKeys.length; i++) {
-                        const key = CustomFieldsKeys[i];
-                        if (!key) continue;  // narrow key from string | undefined → string
-
-                        for (const k of CustomFieldsKeys) {
-                            const entry = cmdbRow.custom_fields[k];
-                            if (entry) {
-                                enrichmentMap.set(k, entry.value);
-                            }
-                        }
-
-                        switch (key) {
-                            case "likelyhood":
-                                likelyhood = Number(cmdbRow.custom_fields[key]!.value);
-                                break;
-                            case "impact":
-                                impact = Number(cmdbRow.custom_fields[key]!.value);
-                                break;
-                            case "criticality":
-                                criticality = Number(cmdbRow.custom_fields[key]!.value);
-                                break;
-                            case "data-sensitivity":
-                                dataSensitivity = Number(cmdbRow.custom_fields[key]!.value);
-                                break;
-                        }
-
-                    }
-                }
-
-                const ImpactScore = dataSensitivity! + impact! + criticality!
-                const Risk = ImpactScore * likelyhood!;
-                const RiskOutOf10 = Math.round((Risk / 27) * 10)
-
-                enrichmentMap.set("risk-score", RiskOutOf10);
-
-                enrichmentMap.set("eol-date", cmdbRow.asset_eol_date.date!);
-
-
-
-                sortLog = {
-                    enrichment: enrichmentMap.size > 0 ? [enrichmentMap] : [],
-                    processes: new Map<string, ProcessMessageEntry[]>()
-                };
-
-
-                sortedLogsOnHostnameAndProcess.set(hostname, sortLog);      // returns HostnameLogMap type
-            }
-
-
-            let messageEntries = sortLog.processes.get(process);
-            if (!messageEntries) {
-                messageEntries = [];
-                sortLog.processes.set(process, messageEntries);
-            }
-
-
-            let entry = messageEntries.find(e => e.message === messageKey);
-            if (!entry) {
-                entry = { message: messageKey, occurrences: [] };
-                messageEntries.push(entry);
-            }
-
-            const timestamp = log.split(" ", 4).slice(0, 3).join(" ");      // process and push date 
-            const pidMatch = log.match(/\[(\d+)\]/);
-            const pid = pidMatch ? pidMatch[1] : undefined;
-            const datePart = pid
-                ? `${timestamp} [${pid}]`
-                : timestamp;
-
-            entry.occurrences.push(datePart);
-
-        }
-
-
-
-        type SerializedCmdbAsset = Array<Record<string, string | number>>;
-
-        type SerializedProcessMessage = {
-            message: string;
-            occurrences: string[];
-        };
-
-        type SerializedProcesses = Record<string, SerializedProcessMessage[]>;
-
-        type SerializedHostEntry = {
-            enrichment: SerializedCmdbAsset;
-            processes: SerializedProcesses;
-        };
-
-        type SerializedHostnameLogs = Record<string, SerializedHostEntry>;
-
-        const outputObj: SerializedHostnameLogs = {};
-
-        for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {
-
-            outputObj[hostname] = {
-                enrichment: processEntry.enrichment.map(m => Object.fromEntries(m)),
-                processes: {}
-            };
-
-            for (const [process, messageEntries] of processEntry.processes) {
-
-                outputObj[hostname].processes[process] =
-                    messageEntries.map(entry => ({
-                        message: entry.message,
-                        occurrences: entry.occurrences
-                    }));
-            }
-        }
-
-
-
-        fs.writeFileSync(processedFilename, JSON                                // write to JSON file
-            .stringify(outputObj, null, 2), "utf-8");
+        fs.writeFileSync(processedFilename, JSON
+            .stringify(serializedLogs, null, 2), "utf-8");
 
     } catch (error) {
         console.error(error);
         throw error;
     }
+}
+
+
+/**
+ * triming and character cleanup is necessary
+ * @returns logsToBeParsed: string[]
+ */
+function sortLogsToBeparsed(): string[] {
+    const logsToBeParsed = fs.readFileSync(originalFilename, "utf-8")
+        .split("\n")
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => line.replace(/^"(.*)",?$/, "$1"));
+
+    return logsToBeParsed;
+}
+
+
+/**
+ * 
+ */
+function trimmingAndEnrichingLogs(
+    _cmdb_: CmdbResponse,
+    _logsToBeParsed: string[]
+) {
+
+    for (let i = 0; i < _logsToBeParsed.length; i++) {
+
+        // does log exist checker
+        const log = _logsToBeParsed[i];
+        if (!log || !_logsToBeParsed[i]) continue;
+
+        // do hostname/process exist checker
+        const hostnameMatch = log.match(regexToFetchHostnameSyslog);
+        const processMatch = log.match(regexToFetchProcessSyslog);
+        if (!hostnameMatch || !hostnameMatch[1] ||
+            !processMatch || !processMatch[1]) continue;
+
+        const hostname = hostnameMatch[1];
+        const process = processMatch[1];
+
+        // last checker, for separator, so that we know we deal with syslog logs
+        const separatorIndex = log.indexOf(": ");
+        if (separatorIndex === -1) continue;
+
+        const logMessage = log.slice(separatorIndex + 2);
+
+        let hostnameHolder = setParentHolderBasedOnhostname(_cmdb_, hostname)
+        if (!hostnameHolder) continue;
+
+        recordingLogMessageAndOccurences(hostnameHolder, process, logMessage, log);
+    }
+}
+
+
+/**
+ * Function either returns a hostname holder with log enrichment 
+ * or nothing if hostname was already recorded
+ */
+function setParentHolderBasedOnhostname(
+    _cmdb_: CmdbResponse,
+    _hostname: string): HostEntry | undefined {
+
+    let sortLogsOnHostname = sortedLogsOnHostnameAndProcess.get(_hostname);
+
+    if (!sortLogsOnHostname) {
+
+        // retrieve matching asset based on hostname
+        const cmdbRow = (_cmdb_.rows as CmdbRow[]).find(
+            row => row.custom_fields.hostname?.value === _hostname
+        );
+
+        const enrichmentMap = new Map<string, string | number>();
+        let likelyhood: number | null = null;
+        let impact: number | null = null;
+        let criticality: number | null = null;
+        let dataSensitivity: number | null = null;
+
+        if (cmdbRow) {
+
+            // setup enrichment data structure based on CustomFieldsKeys
+            for (let i = 0; i < CustomFieldsKeys.length; i++) {
+
+                const key = CustomFieldsKeys[i];
+                if (!key) continue;
+
+                for (const k of CustomFieldsKeys) {
+                    const entry = cmdbRow.custom_fields[k];
+                    if (entry) {
+                        enrichmentMap.set(k, entry.value);
+                    }
+                }
+
+                switch (key) {
+                    case "likelyhood":
+                        likelyhood = Number(cmdbRow.custom_fields[key]!.value);
+                        break;
+                    case "impact":
+                        impact = Number(cmdbRow.custom_fields[key]!.value);
+                        break;
+                    case "criticality":
+                        criticality = Number(cmdbRow.custom_fields[key]!.value);
+                        break;
+                    case "data-sensitivity":
+                        dataSensitivity = Number(cmdbRow.custom_fields[key]!.value);
+                        break;
+                }
+            }
+        }
+
+
+        const ImpactScore = dataSensitivity! + impact! + criticality!
+        const RiskScore = Math.round((ImpactScore * likelyhood! / 27) * 10)
+
+        enrichmentMap.set("risk-score", RiskScore);
+
+        enrichmentMap.set("eol-date", (cmdbRow as any).asset_eol_date.date);
+
+        sortLogsOnHostname = {
+            enrichment: enrichmentMap.size > 0 ? [enrichmentMap] : [],
+            processes: new Map<string, ProcessMessageEntry[]>()
+        };
+
+        sortedLogsOnHostnameAndProcess.set(_hostname, sortLogsOnHostname);
+    }
+
+    return sortLogsOnHostname;
+}
+
+
+/**
+ * Append to hostname holder the process holder if it was not recorded yet
+ * and message structure.
+ * Then append message if it does not exist yet + the occurences represented
+ * as timestamps
+ */
+function recordingLogMessageAndOccurences(
+    _hostnameHolder: HostEntry,
+    _process: string,
+    _logMessage: string,
+    _log: string
+) {
+    let messageEntries = _hostnameHolder.processes.get(_process);
+    if (!messageEntries) {
+        messageEntries = [];
+        _hostnameHolder.processes.set(_process, messageEntries);
+    }
+
+    let entry = messageEntries.find(e => e.message === _logMessage);
+    if (!entry) {
+        entry = { message: _logMessage, occurrences: [] };
+        messageEntries.push(entry);
+    }
+
+    const timestamp = _log.split(" ", 4).slice(0, 3).join(" ");
+    const pidMatch = _log.match(/\[(\d+)\]/);
+    const pid = pidMatch ? pidMatch[1] : undefined;
+    const datePart = pid
+        ? `${timestamp} [${pid}]`
+        : timestamp;
+
+    entry.occurrences.push(datePart);
+}
+
+
+/**
+ * Serialize logs or JSON file
+ */
+function logSerialization(): SerializedHostnameLogs {
+    const outputObj: SerializedHostnameLogs = {};
+
+    for (const [hostname, processEntry] of sortedLogsOnHostnameAndProcess) {
+
+        outputObj[hostname] = {
+            enrichment: processEntry.enrichment.map(m => Object.fromEntries(m)),
+            processes: {}
+        };
+
+        for (const [process, messageEntries] of processEntry.processes) {
+
+            outputObj[hostname].processes[process] =
+                messageEntries.map(entry => ({
+                    message: entry.message,
+                    occurrences: entry.occurrences
+                }));
+        }
+    }
+    return outputObj;
 }
