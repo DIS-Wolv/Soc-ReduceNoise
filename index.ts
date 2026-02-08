@@ -189,8 +189,11 @@ async function preprocessingLogs(_cmdb: CmdbResponse) {
 
         const serializedLogs = logSerialization();
 
-        fs.writeFileSync(processedFilename, JSON
-            .stringify(serializedLogs, null, 2), "utf-8");
+        // readable
+        //fs.writeFileSync(processedFilename, JSON.stringify(serializedLogs, null, 2), "utf-8");
+        //compressed
+        fs.writeFileSync(processedFilename, JSON.stringify(serializedLogs), "utf-8");
+
 
     } catch (error) {
         console.error(error);
